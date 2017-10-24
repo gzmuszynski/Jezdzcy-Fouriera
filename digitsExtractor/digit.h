@@ -4,14 +4,26 @@
 #include <QImage>
 #include <qstring.h>
 
-
+// class representing a MISNT digit
 
 class digit
 {
 public:
-    digit();
+    digit() {}
+    digit(QImage picture);
+    digit(unsigned char label, QImage picture);
+
+    QImage getPicture() const;
+
+    unsigned char getLabel() const;
+    void    setLabel(const unsigned char &value);
+
+    QVector<float> getFeatures() const;
+    void           setFeatures(const QVector<float> &value);
+    void           addFeature (const float &value);
+
 private:
-    QString label;
+    unsigned char label;
     QImage picture;
     QVector<float> features;
 };
