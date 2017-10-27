@@ -12,6 +12,9 @@ public:
     digit()                                                       { }
     digit(QImage picture)                      : picture(picture) { }
     digit(unsigned char label, QImage picture) : digit(picture)   { this->label = label; }
+    digit(unsigned char label, QImage picture, QVector<float> features)
+                                               : digit(label, picture)
+                                                                  { this->features = features; }
 
     QImage         getPicture () const                            { return picture; }
 
