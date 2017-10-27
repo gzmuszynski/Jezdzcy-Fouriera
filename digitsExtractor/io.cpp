@@ -155,8 +155,8 @@ QVector<digit> io::deserialize(QString filename,QString imagesFilename)
             QString       line  = in.readLine();
             QStringList   list  = line.split(' ');
 
-            unsigned char label = line[0];
-            QImage picture(QString(QString(QString("%1_%2.bmp").arg(filename).arg(i, 5, 10, QChar('0')),"bmp")));
+            unsigned char label = list[0].toStdString().c_str()[0];
+            QImage picture(QString("%1_%2.bmp").arg(imagesFilename).arg(i, 5, 10, QChar('0')),"bmp");
             QVector<float> features;
 
             for(int n = 1; n < list.size(); n++)
