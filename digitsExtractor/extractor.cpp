@@ -55,6 +55,10 @@ int main(int argc, char *argv[])
         {
             QString stringTaskLength = argv[i+1];
             task_length = stringTaskLength.toInt();
+
+            qDebug() << "Thread task lenght" << task_length;
+
+            i+=1;
         }
     }
     if(!(labels.isEmpty()) && !(pictures.isEmpty()))
