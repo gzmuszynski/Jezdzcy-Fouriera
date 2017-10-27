@@ -12,7 +12,6 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     io.cpp \
-    digit.cpp \
     featureextractor.cpp
 
 # The following define makes your compiler emit warnings if you use
