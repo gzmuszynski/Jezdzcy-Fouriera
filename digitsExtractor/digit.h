@@ -9,22 +9,22 @@
 class digit
 {
 public:
-    digit() {}
-    digit(QImage picture);
-    digit(unsigned char label, QImage picture);
+    digit()                                                       { }
+    digit(QImage picture)                      : picture(picture) { }
+    digit(unsigned char label, QImage picture) : digit(picture)   { this->label = label; }
 
-    QImage getPicture() const;
+    QImage         getPicture() const                             { return picture; }
 
-    unsigned char getLabel() const;
-    void    setLabel(const unsigned char &value);
+    unsigned char  getLabel() const                               { return label; }
+    void           setLabel(const unsigned char &value)           { label = value; }
 
-    QVector<float> getFeatures() const;
-    void           setFeatures(const QVector<float> &value);
-    void           addFeature (const float &value);
+    QVector<float> getFeatures() const                            { return features; }
+    void           setFeatures(const QVector<float> &value)       { features = value; }
+    void           addFeature (const float &value)                { features.push_back(value); }
 
 private:
-    unsigned char label;
-    QImage picture;
+    unsigned char  label;
+    QImage         picture;
     QVector<float> features;
 };
 
