@@ -1,5 +1,6 @@
 QT += core
 QT += gui
+QT += concurrent
 
 CONFIG += c++11  qtmedia
 
@@ -11,7 +12,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     io.cpp \
-    digit.cpp
+    digit.cpp \
+    featureextractor.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -26,4 +28,5 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += \
     io.h \
-    digit.h
+    digit.h \
+    featureextractor.h

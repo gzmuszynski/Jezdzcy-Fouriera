@@ -7,11 +7,12 @@
 
 QVector<digit> io::parse(QString labels, QString pictures)
 {
+    qDebug() << "--------MINST Parser--------";
+
     QVector<digit> digits;
 
     QFile labelsFile  (labels);
     QFile picturesFile(pictures);
-
 
     labelsFile.  open(QFile::ReadOnly);
     picturesFile.open(QFile::ReadOnly);
@@ -22,15 +23,13 @@ QVector<digit> io::parse(QString labels, QString pictures)
     labelsData.  setByteOrder(QDataStream::BigEndian);
     picturesData.setByteOrder(QDataStream::BigEndian);
 
-    qDebug() << "Files" << labelsFile.fileName() << picturesFile.fileName();
-
     if(labelsFile.isReadable() && picturesFile.isReadable())
     {
         int32_t magicNumber_l, magicNumber_p;
         int32_t numItems_l,    numItems_p;
         int32_t height, width;
 
-        qDebug() << "Files set up";
+        qDebug() << "Files set up\nParsing Files";
 
         labelsData   >> magicNumber_l;
         picturesData >> magicNumber_p;
@@ -84,23 +83,60 @@ QVector<digit> io::parse(QString labels, QString pictures)
         qDebug() << "File statuses" << labelsFile.isOpen() << picturesFile.isOpen();
     }
 
+    qDebug() << "Step finished\n";
     return digits;
 }
 
 void io::deparse(QVector<digit> digits, QString filename)
 {
+    qDebug() << "--------Picture Extractor--------";
+
     qDebug() << "Save pictures destination" << QString("..\\images\\%1_NUMBER.bmp").arg(filename);
+
     for(int i = 0; i < digits.size(); i++)
     {
         QImage picture = digits[i].getPicture();
         picture.save(QString("..\\images\\%1_%2.bmp").arg(filename).arg(i, 5, 10, QChar('0')),"bmp");
     }
+
     qDebug() << "Saved files count" << digits.size();
+    qDebug() << "Step finished\n";
 }
 
 void io::serialize(QVector<digit> digits, QString filename)
 {
+    qDebug() << "--------Serializer--------";
 
+    QFile file(filename);
+
+    qDebug() << "Creating file" << filename;
+
+    if( file.open(QFile::WriteOnly))
+    {
+        qDebug() << "Saving features to file";
+
+        QTextStream out(&file);
+
+        for(int i = 0; i < digits.size(); i++)
+        {
+            if(i > 0)
+                out << "\n";
+
+            out << digits[i].getLabel();
+
+            QVector<float> features = digits[i].getFeatures();
+            for(int n = 0; n < features.size(); n++)
+            {
+                out << " " << features[n];
+            }
+
+        }
+    }
+    qDebug() << "Saved objects count" << digits.size();
+
+    file.close();
+
+    qDebug() << "Step finished\n";
 }
 
 QVector<digit> io::deserialize(QString filename)

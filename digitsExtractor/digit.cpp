@@ -1,4 +1,5 @@
 #include "digit.h"
+#include <QDebug>
 
 digit::digit(QImage picture) : picture(picture)
 {
@@ -37,5 +38,5 @@ void digit::setFeatures(const QVector<float> &value)
 
 void digit::addFeature(const float &value)
 {
-
+    features.push_back(value);
 }
