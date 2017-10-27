@@ -16,7 +16,8 @@ int main(int argc, char *argv[])
     QVector<digit> digits;
 
     QString filename;
-    QString imagesFilename;
+    QString filenameTrain;
+
     int K = 25;
     int task_length = 100;
 
@@ -26,10 +27,10 @@ int main(int argc, char *argv[])
 
         if(test == "-f") // input files
         {
-            filename   = argv[i+1];
-            imagesFilename   = argv[i+2];
+            filenameTrain   = argv[i+1];
+            filename        = argv[i+2];
 
-            qDebug() << "Input file" << filename;
+            qDebug() << "Input files" << filenameTrain << filename;
 
             i+=3;
         }
@@ -55,7 +56,9 @@ int main(int argc, char *argv[])
     if(!(filename.isEmpty()) && !(imagesFilename.isEmpty()))
     {
         qDebug() << "";
-        digits = io::deserialize(filename);
+
+        digitsTrain = io::deserialize(filenameTrain);
+        digits      = io::deserialize(filename);
 
     }
 

@@ -135,7 +135,7 @@ void io::serialize(QVector<digit> digits, QString filename)
     qDebug() << "Step finished\n";
 }
 
-QVector<digit> io::deserialize(QString filename,QString imagesFilename)
+QVector<digit> io::deserialize(QString filename)
 {
     qDebug() << "--------Deserializer--------";
 
@@ -156,7 +156,6 @@ QVector<digit> io::deserialize(QString filename,QString imagesFilename)
             QStringList   list  = line.split(' ');
 
             unsigned char label = list[0].toStdString().c_str()[0];
-            QImage picture(QString("%1_%2.bmp").arg(imagesFilename).arg(i, 5, 10, QChar('0')),"bmp");
             QVector<float> features;
 
             for(int n = 1; n < list.size(); n++)
@@ -164,7 +163,7 @@ QVector<digit> io::deserialize(QString filename,QString imagesFilename)
                 features.push_back(list[n].toFloat());
             }
 
-            digits.push_back(digit(label, picture, features));
+            digits.push_back(digit(label, features));
 
             i++;
         }
