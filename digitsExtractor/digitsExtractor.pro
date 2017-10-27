@@ -10,9 +10,10 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
-SOURCES += main.cpp \
+SOURCES += \
     io.cpp \
-    featureextractor.cpp
+    featureextractor.cpp \
+    extractor.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings

@@ -90,13 +90,12 @@ QVector<digit> io::parse(QString labels, QString pictures)
 void io::deparse(QVector<digit> digits, QString filename)
 {
     qDebug() << "--------Picture Extractor--------";
-
-    qDebug() << "Save pictures destination" << QString("..\\images\\%1_NUMBER.bmp").arg(filename);
+    qDebug() << "Save pictures destination" << QString("%1_NUMBER.bmp").arg(filename);
 
     for(int i = 0; i < digits.size(); i++)
     {
         QImage picture = digits[i].getPicture();
-        picture.save(QString("..\\images\\%1_%2.bmp").arg(filename).arg(i, 5, 10, QChar('0')),"bmp");
+        picture.save(QString("%1_%2.bmp").arg(filename).arg(i, 5, 10, QChar('0')),"bmp");
     }
 
     qDebug() << "Saved files count" << digits.size();
@@ -108,13 +107,11 @@ void io::serialize(QVector<digit> digits, QString filename)
     qDebug() << "--------Serializer--------";
 
     QFile file(filename);
-
     qDebug() << "Creating file" << filename;
 
     if( file.open(QFile::WriteOnly))
     {
         qDebug() << "Saving features to file";
-
         QTextStream out(&file);
 
         for(int i = 0; i < digits.size(); i++)
@@ -133,13 +130,48 @@ void io::serialize(QVector<digit> digits, QString filename)
         }
     }
     qDebug() << "Saved objects count" << digits.size();
-
     file.close();
 
     qDebug() << "Step finished\n";
 }
 
-QVector<digit> io::deserialize(QString filename)
+QVector<digit> io::deserialize(QString filename,QString imagesFilename)
 {
-    return QVector<digit>();
+    qDebug() << "--------Deserializer--------";
+
+    QFile file(filename);
+    qDebug() << "Opening file" << filename;
+
+    QVector<digit> digits;
+
+    if( file.open(QFile::ReadOnly))
+    {
+        qDebug() << "Reading features from file";
+        QTextStream in(&file);
+
+        int i = 0;
+        while(!(in.atEnd()))
+        {
+            QString       line  = in.readLine();
+            QStringList   list  = line.split(' ');
+
+            unsigned char label = line[0];
+            QImage picture(QString(QString(QString("%1_%2.bmp").arg(filename).arg(i, 5, 10, QChar('0')),"bmp")));
+            QVector<float> features;
+
+            for(int n = 1; n < list.size(); n++)
+            {
+                features.push_back(list[n].toFloat());
+            }
+
+            digits.push_back(digit(label, picture, features));
+
+            i++;
+        }
+    }
+    qDebug() << "Read objects count" << digits.size();
+    file.close();
+
+    qDebug() << "Step finished\n";
+    return digits;
 }
