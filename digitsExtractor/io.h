@@ -1,7 +1,7 @@
 #ifndef IO_H
 #define IO_H
 
-#include "digit.h"
+#include "element.h"
 
 #include <QVector>
 
@@ -10,10 +10,10 @@
 class io
 {
 public:
-    static QVector<digit> parse       (QString labels, QString pictures);
-    static void           deparse     (QVector<digit> digits, QString filename);
-    static void           serialize   (QVector<digit> digits, QString filename);
-    static QVector<digit> deserialize (QString filename);
+    static QVector<Element> parse       (QString labels, QString pictures);
+    static void           deparse     (QVector<Element> digits, QString filename);
+    static void           serialize   (QVector<Element> digits, QString filename);
+    static QVector<Element> deserialize (QString filename);
 
 };
 

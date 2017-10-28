@@ -2,25 +2,40 @@
 #define CLASSIFIERENGINE_H
 
 #include "class.h"
-#include "digit.h"
+#include "element.h"
+
+#include <QMap>
+#include <QMutex>
 
 
 
 class ClassifierEngine
 {
 public:
-    ClassifierEngine(QVector<digit> &baseElements);
+    ClassifierEngine(QVector<Element> &baseElements);
 
-    void classify(QVector<digit> &elements);
+    void classify(QVector<Element> &elements, int task_length);
 
-    float distance(digit from, digit to);
-    void setDistanceParameter(int t) { this.t = t; }
+    void setDistanceParameter(int t) { this->t = t; }
+    void setK(int k)                 { this->K = k; }
 
 private:
-    void classifyThread(QVector<digit> &elements, int n, int len);
+    float distance(Element from, Element to);
 
-    QVector<Class> classes;
+    void classifyThread(QVector<Element> &elements, int n, int len);
+
+    void normalizeFeatures(QVector<Element> &elements);
+
+    QMap<unsigned char, Class> classes;
     int t = 1;
+    int K = 25;
+
+    int good = 0;
+    int bad  = 0;
+
+    mutable QMutex mutex;
+    QVector<float> mins;
+    QVector<float> maxes;
 };
 
 #endif // CLASSIFIERENGINE_H

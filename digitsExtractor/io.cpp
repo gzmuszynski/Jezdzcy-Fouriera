@@ -5,11 +5,11 @@
 #include <QtEndian>
 
 
-QVector<digit> io::parse(QString labels, QString pictures)
+QVector<Element> io::parse(QString labels, QString pictures)
 {
     qDebug() << "--------MINST Parser--------";
 
-    QVector<digit> digits;
+    QVector<Element> digits;
 
     QFile labelsFile  (labels);
     QFile picturesFile(pictures);
@@ -74,7 +74,7 @@ QVector<digit> io::parse(QString labels, QString pictures)
                 }
             }
 
-            digits.push_back(digit(label, picture));
+            digits.push_back(Element(label, picture));
         }
         qDebug() << "Parsed items count" << digits.size();
     }
@@ -87,7 +87,7 @@ QVector<digit> io::parse(QString labels, QString pictures)
     return digits;
 }
 
-void io::deparse(QVector<digit> digits, QString filename)
+void io::deparse(QVector<Element> digits, QString filename)
 {
     qDebug() << "--------Picture Extractor--------";
     qDebug() << "Save pictures destination" << QString("%1_NUMBER.bmp").arg(filename);
@@ -102,7 +102,7 @@ void io::deparse(QVector<digit> digits, QString filename)
     qDebug() << "Step finished\n";
 }
 
-void io::serialize(QVector<digit> digits, QString filename)
+void io::serialize(QVector<Element> digits, QString filename)
 {
     qDebug() << "--------Serializer--------";
 
@@ -135,14 +135,14 @@ void io::serialize(QVector<digit> digits, QString filename)
     qDebug() << "Step finished\n";
 }
 
-QVector<digit> io::deserialize(QString filename)
+QVector<Element> io::deserialize(QString filename)
 {
     qDebug() << "--------Deserializer--------";
 
     QFile file(filename);
     qDebug() << "Opening file" << filename;
 
-    QVector<digit> digits;
+    QVector<Element> digits;
 
     if( file.open(QFile::ReadOnly))
     {
@@ -163,7 +163,7 @@ QVector<digit> io::deserialize(QString filename)
                 features.push_back(list[n].toFloat());
             }
 
-            digits.push_back(digit(label, features));
+            digits.push_back(Element(label, features));
 
             i++;
         }

@@ -28,5 +28,5 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += \
     io.h \
-    digit.h \
-    featureextractor.h
+    featureextractor.h \
+    element.h

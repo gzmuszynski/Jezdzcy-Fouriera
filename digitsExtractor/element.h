@@ -6,13 +6,13 @@
 
 // class representing a MISNT digit
 
-class digit
+class Element
 {
 public:
-    digit()                                                       { }
-    digit(QImage picture)                      : picture(picture) { }
-    digit(unsigned char label, QImage picture) : digit(picture)   { this->label = label; }
-    digit(unsigned char label, QVector<float> features)           { this->label = label; this->features = features; }
+    Element()                                                       { }
+    Element(QImage picture)                      : picture(picture) { }
+    Element(unsigned char label, QImage picture) : Element(picture)   { this->label = label; }
+    Element(unsigned char label, QVector<float> features)           { this->label = label; this->features = features; }
 
     QImage         getPicture () const                            { return picture; }
 

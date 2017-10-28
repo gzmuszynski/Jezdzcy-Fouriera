@@ -1,6 +1,6 @@
 #ifndef CLASS_H
 #define CLASS_H
-#include "digit.h"
+#include "element.h"
 
 class Class{
 public:
@@ -10,16 +10,16 @@ public:
     void           setLabel(unsigned char label)  { this->label = label; }
     unsigned char  getLabel()                     { return label; }
 
-    void           addElement    (digit &element) { elements.push_back(element); }
-    QVector<digit> getElements()                  { return elements; }
-    void           addBaseElement(digit &element) { baseElements.push_back(element); }
-    QVector<digit> getBaseElement()               { return baseElements; }
+    void           addElement    (Element &element) { elements.push_back(element); }
+    QVector<Element>&getElements()                  { return elements; }
+    void           addBaseElement(Element &element) { baseElements.push_back(element); }
+    QVector<Element>&getBaseElement()               { return baseElements; }
 
 private:
     unsigned char  label;
 
-    QVector<digit> baseElements;
-    QVector<digit> elements;
+    QVector<Element> baseElements;
+    QVector<Element> elements;
 };
 
 #endif // CLASS_H

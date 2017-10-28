@@ -1,22 +1,34 @@
 #include "classifierengine.h"
 #include <QtMath>
+#include <QtDebug>
+#include <QtConcurrent>
 
-ClassifierEngine::ClassifierEngine(QVector<digit> &baseElements)
+ClassifierEngine::ClassifierEngine(QVector<Element> &baseElements)
 {
+    qDebug() << "--------K-NN Training--------";
 
+    normalizeFeatures(baseElements);
+
+    for(int i = 0; i < baseElements.size(); i++)
+    {
+        unsigned char label = baseElements[i].getLabel();
+
+        if(!(classes.keys().contains(label)))
+        {
+            classes.insert(label, Class(label));
+        }
+        classes[label].addBaseElement(baseElements[i]);
+    }
+
+    qDebug() << "Created" << classes.size() << "classes";
 }
 
-void ClassifierEngine::classify(QVector<digit> &elements)
-{
-
-}
-
-float ClassifierEngine::distance(digit from, digit to)
+float ClassifierEngine::distance(Element from, Element to)
 {
     QVector<float> features1 = from.getFeatures();
     QVector<float> features2 = to.getFeatures();
 
-    int test = std::min(features1.size(), features2.size());
+    int test = qMin(features1.size(), features2.size());
 
     float sum = 0.0f;
 
@@ -47,8 +59,123 @@ float ClassifierEngine::distance(digit from, digit to)
     return sum;
 }
 
-void ClassifierEngine::classifyThread(QVector<digit> &elements, int n, int len)
+void ClassifierEngine::classify(QVector<Element> &elements, int task_length)
+{
+    qDebug() << "--------K-NN Classifier--------";
+
+    normalizeFeatures(elements);
+
+    qDebug() << "Separating task into threads";
+
+    for(int n = 0; n < elements.size(); n += task_length)
+    {
+        int len = n + task_length >= elements.size()?  elements.size()-n : task_length;
+        QtConcurrent::run(this, &ClassifierEngine::classifyThread, std::ref(elements), n, len);
+    }
+
+    qDebug() << "Wait for tasks";
+    QThreadPool::globalInstance()->waitForDone();
+
+
+    qDebug() << "Step finished\n";
+
+    qDebug() << "Correctly classified"   << good << "elements";
+    qDebug() << "Incorrectly classified" << bad  << "elements";
+}
+
+void ClassifierEngine::classifyThread(QVector<Element> &elements, int n, int len)
+{
+    for(int i = n; i < n+len; i++)
+    {
+        Element element = elements[i];
+        QMap<float, unsigned char> distances;
+
+        for(int k = 0; k < classes.count(); k++)
+        {
+            unsigned char label = classes.keys()[k];
+            QVector<Element> baseElements = classes[label].getBaseElement();
+
+            for(int n = 0; n < baseElements.size(); n++)
+            {
+                distances.insert(distance(element, baseElements[k]), label);
+            }
+        }
+
+        QList<unsigned char> vals = distances.values().mid(0,K);
+
+        unsigned char final;
+        int occurences = 0;
+
+        for(int k = 0; k < classes.count(); k++)
+        {
+            unsigned char label = classes.keys()[k];
+
+            int classCount = vals.count(label);
+            if(classCount > occurences)
+            {
+                occurences = classCount;
+                final = label;
+            }
+        }
+//        qDebug() << final << occurences;
+        QMutexLocker locker(&mutex);
+        classes[final].addElement(element);
+        if(final == element.getLabel())
+            good++;
+        else
+            bad++;
+        locker.unlock();
+    }
+}
+
+void ClassifierEngine::normalizeFeatures(QVector<Element> &elements)
 {
 
+    if(mins.isEmpty() && maxes.isEmpty())
+    {
+        qDebug() << "Finding features mins and maxes";
 
+        for(int i = 0; i < elements.size(); i++)
+        {
+            QVector<float> features = elements[i].getFeatures();
+            for (int j = 0; j < features.size(); j++)
+            {
+                if(j >= mins.size())
+                {
+                    mins .push_back(features[j]);
+                    maxes.push_back(features[j]);
+                }
+                else
+                {
+                    float val = features[j];
+
+                    mins[j]  = qMin(mins [j], val);
+                    maxes[j] = qMax(maxes[j], val);
+                }
+            }
+        }
+
+        for(int i = 0; i < maxes.size(); i++)
+        {
+            qDebug() << "Feature:" << i << "Min:" << mins[i] << "Max:" << maxes[i] << "Delta:" << mins[i] - maxes[i];
+
+            float maxmin   = maxes[i] - mins[i];
+            maxes[i] = maxmin != 0.0f ? 1.0f / maxmin : 0.0f;
+        }
+
+    }
+
+    qDebug() << "Normalizing" << elements.size() << "elements";
+
+    for(int i = 0; i < elements.size(); i++)
+    {
+        QVector<float> features = elements[i].getFeatures();
+
+        for (int j = 0; j < features.size(); j++)
+        {
+            features [j] = ( features[j] - mins[j] ) * maxes[j];
+        }
+    }
+
+    qDebug() << "Task done";
 }

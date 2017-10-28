@@ -28,6 +28,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += \
     io.h \
-    digit.h \
+    element.h \
     class.h \
     classifierengine.h

@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     qDebug() << "MINST features extractor";
     qDebug() << "------------------------";
 
-    QVector<digit> digits;
+    QVector<Element> digits;
 
     QString labels;
     QString pictures;

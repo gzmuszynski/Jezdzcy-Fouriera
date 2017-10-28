@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include <QtDebug>
+#include "classifierengine.h"
 #include "featureextractor.h"
 #include "io.h"
 
@@ -12,8 +13,8 @@ int main(int argc, char *argv[])
     qDebug() << "k-NN Classifier";
     qDebug() << "---------------";
 
-    QVector<digit> digitsTrain;
-    QVector<digit> digits;
+    QVector<Element> elementsTrain;
+    QVector<Element> elements;
 
     QString filename;
     QString filenameTrain;
@@ -34,10 +35,10 @@ int main(int argc, char *argv[])
 
             i+=3;
         }
-        if(test == "-k") // save pictures
+        if(test == "-k") // K number
         {
             QString stringK = argv[i+1];
-            k = stringK.toInt();
+            K = stringK.toInt();
 
             qDebug() << "K" << K;
 
@@ -53,14 +54,20 @@ int main(int argc, char *argv[])
             i+=1;
         }
     }
-    if(!(filename.isEmpty()) && !(imagesFilename.isEmpty()))
+    if(!(filename.isEmpty()) && !(filenameTrain.isEmpty()))
     {
         qDebug() << "";
 
-        digitsTrain = io::deserialize(filenameTrain);
-        digits      = io::deserialize(filename);
+        elementsTrain = io::deserialize(filenameTrain);
+        elements      = io::deserialize(filename);
+
+        ClassifierEngine engine(elementsTrain);
+
+        engine.setK(K);
+        engine.classify(elements, task_length);
 
     }
+
 
     return 0;
 }

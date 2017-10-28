@@ -1,14 +1,15 @@
 #include "featureextractor.h"
 #include <QtConcurrent/QtConcurrent>
 
-void FeatureExtractor::extract(QVector<digit> &digits, int task_length)
+void FeatureExtractor::extract(QVector<Element> &digits, int task_length)
 {
     qDebug() << "--------Feature Extractor--------";
     qDebug() << "Separating task into threads";
 
     for(int n = 0; n < digits.size(); n += task_length)
     {
-        QtConcurrent::run(extractThread, std::ref(digits), n, task_length);
+        int len = n + task_length >= digits.size()?  digits.size()-n : task_length;
+        QtConcurrent::run(extractThread, std::ref(digits), n, len);
     }
 
     qDebug() << "Wait for tasks";
@@ -17,7 +18,7 @@ void FeatureExtractor::extract(QVector<digit> &digits, int task_length)
     qDebug() << "Step finished\n";
 }
 
-void FeatureExtractor::extractThread(QVector<digit> &digits, int n, int len)
+void FeatureExtractor::extractThread(QVector<Element> &digits, int n, int len)
 {
 
     for(int i = n; i < n+len; i++)
