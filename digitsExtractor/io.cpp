@@ -5,7 +5,7 @@
 #include <QtEndian>
 
 
-QVector<Element> io::parse(QString labels, QString pictures)
+QVector<Element> io::parseMINST(QString labels, QString pictures)
 {
     qDebug() << "--------MINST Parser--------";
 

@@ -10,9 +10,10 @@
 class io
 {
 public:
-    static QVector<Element> parse       (QString labels, QString pictures);
-    static void           deparse     (QVector<Element> digits, QString filename);
-    static void           serialize   (QVector<Element> digits, QString filename);
+    static QVector<Element> parseMINST  (QString labels, QString pictures);
+    static QVector<Element> parseSTAR   (QString pictures);
+    static void           deparse       (QVector<Element> digits, QString filename);
+    static void           serialize     (QVector<Element> digits, QString filename);
     static QVector<Element> deserialize (QString filename);
 
 };

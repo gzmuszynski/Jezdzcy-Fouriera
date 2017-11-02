@@ -3,7 +3,7 @@
 #include "element.h"
 #include <QVector>
 
-class FeatureExtractor
+class MINSTExtractor
 {
 public:
     static void extract      (QVector<Element> &digits, int task_length);

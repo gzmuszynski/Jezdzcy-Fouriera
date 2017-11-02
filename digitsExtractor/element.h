@@ -11,7 +11,7 @@ class Element
 public:
     Element()                                                       { }
     Element(QImage picture)                      : picture(picture) { }
-    Element(unsigned char label, QImage picture) : Element(picture)   { this->label = label; }
+    Element(unsigned char label, QImage picture) : Element(picture) { this->label = label; }
     Element(unsigned char label, QVector<float> features)           { this->label = label; this->features = features; }
 
     QImage         getPicture () const                            { return picture; }

@@ -1,6 +1,6 @@
 #include <QCoreApplication>
 #include <QtDebug>
-#include "featureextractor.h"
+#include "minstextractor.h"
 #include "io.h"
 
 
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     if(!(labels.isEmpty()) && !(pictures.isEmpty()))
     {
         qDebug() << "";
-        digits = io::parse(labels, pictures);
+        digits = io::parseMINST(labels, pictures);
 
 
         if(!(pictures_out.isEmpty()))
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            FeatureExtractor::extract(std::ref(digits), task_length);
+            MINSTExtractor::extract(std::ref(digits), task_length);
         }
         if(!(text_out.isEmpty()))
         {

@@ -38,8 +38,8 @@ float ClassifierEngine::distance(Element from, Element to)
         {
             float x_y = features1[i] - features2[i];
 
-            float pow = 0.0f;
-            for(int p = 0; p < t; p++)
+            float pow = x_y;
+            for(int p = 1; p < t; p++)
             {
                 pow *= x_y;
             }
@@ -48,6 +48,8 @@ float ClassifierEngine::distance(Element from, Element to)
         }
         if(t>=2)
             sum = qPow(sum, 1.0f/t);
+        if(sum < 0)
+            sum = -sum;
     }
     if(t == 0)
     {
@@ -76,11 +78,19 @@ void ClassifierEngine::classify(QVector<Element> &elements, int task_length)
     qDebug() << "Wait for tasks";
     QThreadPool::globalInstance()->waitForDone();
 
-
+    for(int k = 0; k < classes.size(); k++)
+    {
+        unsigned char label = classes.keys()[k];
+        qDebug() << "Class" << (char)label
+                 << "Percent" << classes[label].goods()*100.0f / (classes[label].goods() + classes[label].bads())
+                 << "Elements" << classes[label].getElements().size()
+//                 << "Good" << classes[label].goods() << "Bad" << classes[label].bads()
+                ;
+    }
     qDebug() << "Step finished\n";
 
-    qDebug() << "Correctly classified"   << good << "elements";
-    qDebug() << "Incorrectly classified" << bad  << "elements";
+    qDebug() << "Correctly classified"   << good*100.0f/(good+bad) << "Percent";
+//    qDebug() << "Incorrectly classified" << bad  << "elements";
 }
 
 void ClassifierEngine::classifyThread(QVector<Element> &elements, int n, int len)
@@ -97,33 +107,44 @@ void ClassifierEngine::classifyThread(QVector<Element> &elements, int n, int len
 
             for(int n = 0; n < baseElements.size(); n++)
             {
-                distances.insert(distance(element, baseElements[k]), label);
+                float dist = distance(element, baseElements[n]);
+                distances.insert(dist, label);
             }
         }
 
         QList<unsigned char> vals = distances.values().mid(0,K);
 
+        qSort(vals);
         unsigned char final;
         int occurences = 0;
 
-        for(int k = 0; k < classes.count(); k++)
+        for(int k = 0; k < classes.size(); k++)
         {
             unsigned char label = classes.keys()[k];
 
             int classCount = vals.count(label);
-            if(classCount > occurences)
+
+//            qDebug() << classCount << vals.size() << distances.size();
+
+            if(classCount >= occurences)
             {
                 occurences = classCount;
                 final = label;
             }
         }
-//        qDebug() << final << occurences;
+//        qDebug() << element.getLabel() << final << occurences << K;
         QMutexLocker locker(&mutex);
         classes[final].addElement(element);
         if(final == element.getLabel())
+        {
             good++;
+            classes[final].isGood();
+        }
         else
+        {
             bad++;
+            classes[final].isBad();
+        }
         locker.unlock();
     }
 }
@@ -157,7 +178,7 @@ void ClassifierEngine::normalizeFeatures(QVector<Element> &elements)
 
         for(int i = 0; i < maxes.size(); i++)
         {
-            qDebug() << "Feature:" << i << "Min:" << mins[i] << "Max:" << maxes[i] << "Delta:" << mins[i] - maxes[i];
+            qDebug() << "Feature:" << i << "Min:" << mins[i] << "Max:" << maxes[i] << "Delta:" << maxes[i] - mins[i];
 
             float maxmin   = maxes[i] - mins[i];
             maxes[i] = maxmin != 0.0f ? 1.0f / maxmin : 0.0f;
@@ -175,6 +196,7 @@ void ClassifierEngine::normalizeFeatures(QVector<Element> &elements)
         {
             features [j] = ( features[j] - mins[j] ) * maxes[j];
         }
+        elements[i].setFeatures(features);
     }
 
     qDebug() << "Task done";

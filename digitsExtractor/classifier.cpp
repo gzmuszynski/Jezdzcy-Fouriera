@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 
     int K = 25;
     int task_length = 100;
+    int metric = 1;
 
     for(int i = 1; i < argc; i++)
     {
@@ -53,6 +54,15 @@ int main(int argc, char *argv[])
 
             i+=1;
         }
+        if(test == "-t") // task lenght
+        {
+            QString stringMetricLength = argv[i+1];
+            metric = stringMetricLength.toInt();
+
+            qDebug() << "Metric parameter" << metric;
+
+            i+=1;
+        }
     }
     if(!(filename.isEmpty()) && !(filenameTrain.isEmpty()))
     {
@@ -64,6 +74,7 @@ int main(int argc, char *argv[])
         ClassifierEngine engine(elementsTrain);
 
         engine.setK(K);
+        engine.setDistanceParameter(metric);
         engine.classify(elements, task_length);
 
     }
