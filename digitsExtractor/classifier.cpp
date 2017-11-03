@@ -1,7 +1,7 @@
 #include <QCoreApplication>
 #include <QtDebug>
 #include "classifierengine.h"
-#include "featureextractor.h"
+#include "minstextractor.h"
 #include "io.h"
 
 

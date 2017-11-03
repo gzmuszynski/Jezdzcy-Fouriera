@@ -1,5 +1,6 @@
 #include "io.h"
 
+#include <QDir>
 #include <QFile>
 #include <QtDebug>
 #include <QtEndian>
@@ -62,6 +63,7 @@ QVector<Element> io::parseMINST(QString labels, QString pictures)
             QImage picture(width, height, QImage::Format_Grayscale8);
 
             labelsData   >> label;
+            label += 48;
             for(int x = 0; x < width; x++)
             {
                 for(int y = 0; y < height; y++)
@@ -85,6 +87,90 @@ QVector<Element> io::parseMINST(QString labels, QString pictures)
 
     qDebug() << "Step finished\n";
     return digits;
+}
+
+QVector<QVector<Element>> io::parseSTAR(QString pictures)
+{
+    QMap<QString, unsigned char> STAR;
+    STAR["brus"] = 'B'; STAR["clam"] = 'C';
+    STAR["hook"] = 'H'; STAR["knif"] = 'K';
+    STAR["plie"] = 'p'; STAR["penc"] = 'P';
+    STAR["scis"] = 'S'; STAR["scre"] = 'R';
+    STAR["span"] = 'N'; STAR["stri"] = 'T';
+
+
+    qDebug() << "--------STAR Parser--------";
+
+    QDir root            (pictures);
+    QDir train           (pictures + "/train");
+    QDir plain      (pictures + "/test_plain");
+    QDir light      (pictures + "/test_light");
+    QDir light30 (pictures + "/test_30st_light");
+
+    qDebug() << "Directories set";
+
+    QStringList plainFiles = plain.entryList(QDir::Files);
+    QStringList lightFiles = light.entryList(QDir::Files);
+    QStringList light30Files  = light30.entryList(QDir::Files);
+    QStringList trainDirs  = train.entryList(QDir::Dirs);
+
+    qDebug() << "File lists set";
+
+    QVector<Element> plainVector;
+    QVector<Element> lightVector;
+    QVector<Element> light30Vector;
+    QVector<Element> trainVector;
+
+    for(int i = 0; i < plainFiles.size(); i++)
+    {
+        QString plainString   = plainFiles[i];
+        QString lightString   = lightFiles[i];
+        QString light30String = light30Files[i];
+
+        QImage  plainImage(plain.path()+"/"+plainString);
+        QImage  lightImage(light.path()+"/"+lightString);
+        QImage  light30Image(light30.path()+"/"+light30String);
+
+        Element plainElement(STAR[plainString.mid(0,4)], plainImage);
+        Element lightElement(STAR[lightString.mid(0,4)], lightImage);
+        Element light30Element(STAR[light30String.mid(0,4)], light30Image);
+
+        plainVector.push_back(plainElement);
+        lightVector.push_back(lightElement);
+        light30Vector.push_back(light30Element);
+    }
+
+    qDebug() << "Test sets each contains" << plainVector.size() << lightVector.size() << light30Vector.size() << "elements";
+
+    for(int i = 2; i < trainDirs.size(); i++)
+    {
+        train.cd(trainDirs[i]);
+        unsigned char label = STAR[trainDirs[i].mid(0,4)];
+
+        QStringList trainFiles = train.entryList(QDir::Files);
+
+        for(int f = 0; f < trainFiles.size(); f++)
+        {
+            QString trainString = train.path()+"/"+trainFiles[f];
+            QImage  trainImage(trainString);
+            Element trainElement(label, trainImage);
+
+            trainVector.push_back(trainElement);
+        }
+        train.cdUp();
+    }
+
+    qDebug() << "Train sets contains" << trainVector.size() << "elements";
+
+    QVector<QVector<Element>> vector;
+
+    vector.push_back(trainVector);
+
+    vector.push_back(plainVector);
+    vector.push_back(lightVector);
+    vector.push_back(light30Vector);
+
+    return vector;
 }
 
 void io::deparse(QVector<Element> digits, QString filename)
@@ -119,7 +205,7 @@ void io::serialize(QVector<Element> digits, QString filename)
             if(i > 0)
                 out << "\n";
 
-            out << digits[i].getLabel();
+            out << (char)digits[i].getLabel();
 
             QVector<float> features = digits[i].getFeatures();
             for(int n = 0; n < features.size(); n++)

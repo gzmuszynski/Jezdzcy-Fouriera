@@ -1,9 +1,9 @@
-#include "featureextractor.h"
+#include "minstextractor.h"
 #include <QtConcurrent/QtConcurrent>
 
 #define DEBUG false
 
-void FeatureExtractor::extract(QVector<Element> &digits, int task_length)
+void MINSTExtractor::extract(QVector<Element> &digits, int task_length)
 {
     qDebug() << "--------Feature Extractor--------";
     qDebug() << "Separating task into threads";
@@ -25,7 +25,7 @@ void FeatureExtractor::extract(QVector<Element> &digits, int task_length)
     qDebug() << "Step finished\n";
 }
 
-void FeatureExtractor::extractThread(QVector<Element> &digits, int n, int len)
+void MINSTExtractor::extractThread(QVector<Element> &digits, int n, int len)
 {
 
     bool reset = false;
