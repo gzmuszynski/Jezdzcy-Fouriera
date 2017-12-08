@@ -44,7 +44,7 @@ float ClassifierEngine::distance(Element from, Element to)
                 pow *= x_y;
             }
 
-            sum += pow;
+            sum += qAbs(pow);
         }
         if(t>=2)
             sum = qPow(sum, 1.0f/t);

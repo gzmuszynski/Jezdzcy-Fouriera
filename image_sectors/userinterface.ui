@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>UserInterface</class>
+ <widget class="QMainWindow" name="UserInterface">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>702</width>
+    <height>586</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>UserInterface</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QGraphicsView" name="imageView">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>514</width>
+        <height>514</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>514</width>
+        <height>514</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Klasyfikator</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QComboBox" name="classifierCcomboBox">
+           <item>
+            <property name="text">
+             <string>k-NN</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Metoda wzorców</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Metryka</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="metricSpinBox">
+             <property name="value">
+              <number>2</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>k</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="nearSpinBox">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>Klasyfikuj</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>702</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuPlik">
+    <property name="title">
+     <string>Plik</string>
+    </property>
+    <addaction name="actionOtw_rz_zbi_r_testowy"/>
+    <addaction name="actionOtw_rz_klasy"/>
+    <addaction name="actionZapisz_klasy"/>
+    <addaction name="separator"/>
+    <addaction name="actionOtw_rz_obraz"/>
+   </widget>
+   <addaction name="menuPlik"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionOtw_rz_zbi_r_testowy">
+   <property name="text">
+    <string>Otwórz zbiór uczący</string>
+   </property>
+  </action>
+  <action name="actionOtw_rz_zbi_r_testowy_2">
+   <property name="text">
+    <string>Otwórz zbiór testowy</string>
+   </property>
+  </action>
+  <action name="actionWidmo_cz_stotliwo_ciowe">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Widmo częstotliwościowe</string>
+   </property>
+  </action>
+  <action name="actionOtw_rz_klasy">
+   <property name="text">
+    <string>Otwórz klasy</string>
+   </property>
+  </action>
+  <action name="actionZapisz_klasy">
+   <property name="text">
+    <string>Zapisz klasy</string>
+   </property>
+  </action>
+  <action name="actionOtw_rz_obraz">
+   <property name="text">
+    <string>Otwórz obraz</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>
