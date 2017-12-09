@@ -5,6 +5,7 @@
 #include "extractor.h"
 #include <QMap>
 #include <QMutex>
+#include <QThreadPool>
 
 
 
@@ -20,6 +21,7 @@ public:
     void classify();
 
     void saveFFT(QString directory);
+    void saveClasses(QString filename);
 
     mutable QMutex lock;
 public slots:
@@ -29,6 +31,7 @@ public slots:
 
     void addElementToClass(Element* element);
     void finalizeClassification(QString className, int x, int y, int step);
+    void adaptiveClassifier(int step);
 
 signals:
     void engineBusy(bool isTrue);
@@ -38,6 +41,7 @@ signals:
     void classesReady(QMap<QString,Class*> classes, QVector<Element*> elements);
 
     void trainProgress(int trained, int overall);
+    void stepFinished(int step);
 
 
 private:
@@ -48,6 +52,7 @@ private:
     QVector<Element*>     elements;
 
     int currentClassifier;
+    QThreadPool classifierThreadPool;
 
     QImage* labels;
     QImage* input;
@@ -58,6 +63,7 @@ private:
     int trainedItemCount;
 
     int leftToCompute;
+    int step;
 };
 
 #endif // ENGINE_H

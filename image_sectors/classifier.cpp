@@ -19,8 +19,8 @@ void Classifier::normalizeClasses()
 
     for(int i = 0; i < features.size(); i++)
     {
-        mins. push_back(0);
-        maxes.push_back(0);
+        mins. push_back(features[i]);
+        maxes.push_back(features[i]);
     }
     for(Element* el:elements)
     {
@@ -36,8 +36,9 @@ void Classifier::normalizeClasses()
         QVector<double> features = el->getFeatures();
         for(int i = 0; i < features.size(); i++)
         {
-            features[i] = features[i] - mins[i] / (maxes[i] - mins[i]);
+            features[i] = (features[i] - mins[i]) / (maxes[i] - mins[i]);
         }
+        el->setFeatures(features);
     }
 }
 
@@ -46,8 +47,9 @@ void Classifier::normalize(Element *element)
     QVector<double> features = element->getFeatures();
     for(int i = 0; i < features.size(); i++)
     {
-        features[i] = features[i] - mins[i] / (maxes[i] - mins[i]);
+        features[i] = (features[i] - mins[i]) / (maxes[i] - mins[i]);
     }
+    element->setFeatures(features);
 }
 
 double Classifier::distance(Element *from, Element *to)
@@ -65,9 +67,11 @@ double Classifier::distance(Element *from, Element *to)
         {
             double x_y = features1[i] - features2[i];
 
+            if(x_y < 0)
+                x_y = -x_y;
+
             double pow = x_y;
-            if(pow < 0)
-                pow = -pow;
+
             for(int p = 1; p < metric; p++)
             {
                 pow *= x_y;

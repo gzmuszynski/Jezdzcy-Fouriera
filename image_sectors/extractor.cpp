@@ -1,6 +1,7 @@
 #include "extractor.h"
 #include <QDir>
 #include <QtMath>
+#include <QtDebug>
 
 Extractor::Extractor()
 {
@@ -9,8 +10,78 @@ Extractor::Extractor()
 
 void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y = 0, int step = 0)
 {
+//    qDebug() << "called";
+    // Average
+
+    double mean = 0;
+
+    for(int x = 0; x < picture->width(); x++)
+    {
+        for(int y = 0; y < picture->height(); y++)
+        {
+            QColor col = picture->pixelColor(x,y);
+            double pix = col.red();
+
+            mean += pix;
+        }
+    }
+
+    mean /= (picture->width()*picture->height());
+
+    for(int x = 0; x < picture->width(); x++)
+    {
+        for(int y = 0; y < picture->height(); y++)
+        {
+            QColor col = picture->pixelColor(x,y);
+            double s = col.red();
+            double rgb = s - mean + 127;
+            double n = qBound(0.0, rgb, 255.0);
+
+            picture->setPixelColor(x, y, qRgb(n,n,n));
+        }
+    }
+
+    // minmax
+
+    double min = 255;
+    double max = 0;
+
+    for(int x = 0; x < picture->width(); x++)
+    {
+        for(int y = 0; y < picture->height(); y++)
+        {
+            QColor col = picture->pixelColor(x,y);
+            double pix = col.red();
+
+            max = qMax(max, pix);
+            min = qMin(min, pix);
+        }
+    }
+
+    for(int x = 0; x < picture->width(); x++)
+    {
+        for(int y = 0; y < picture->height(); y++)
+        {
+            QColor col = picture->pixelColor(x,y);
+            double s = col.red();
+            double rgb = (s - min) / (max - min);
+            double n = qBound(0.0, rgb*255, 255.0);
+
+//            picture->setPixelColor(x, y, qRgb(n,n,n));
+        }
+    }
+
+
+
+    // FFT2D and amplitude spectrum
+
     QVector<QVector<std::complex<double> > > fft = FFT2D(picture);
+    QImage* phase = new QImage(picture->size(), QImage::Format_ARGB32);
+
     QVector<double> features;
+
+    double side, top;
+
 
     for(int k=0;k<fft.size();k++)
     {
@@ -18,14 +89,120 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
         {
             double real = fft[k][n].real();
             double imag = fft[k][n].imag();
+
             double rgb = qBound(0.0,qLn(qSqrt((real*real)+(imag*imag)))*32,255.0);
-            picture->setPixelColor(k,n,qRgb(rgb,rgb,rgb));
-            if(k == 0)
-                features.push_back(rgb);
+            double pha = qPow(10,qAtan2(real,imag));
+
+            picture->setPixelColor(k, n, qRgb(rgb,rgb,rgb));
+            phase->setPixelColor  (k, n, qRgb(pha,pha,pha));
+
+            if((x < 16 || x > 32+16) && (y < 24 || y > 32+24))
+                side += rgb;
+            if((x < 24 || x > 32+24) && (y < 16 || y > 32+16))
+                top += rgb;
         }
     }
+
+    if( side > top )
+    {
+        QImage* copy = new QImage(*picture);
+        for(int x=0;x<picture->width();x++)
+        {
+            for(int y=0;y<picture->height();y++)
+            {
+                QColor pix = copy->pixelColor(x,y);
+
+                picture->setPixelColor(y,x,pix);
+            }
+        }
+    }
+    picture->save(QString("D:\\repositories\\builds\\przetwarzanie_obrazu\\sectors\\rand\\%1.bmp").arg(qrand()),"bmp");
+
+    double array = 0;
+    double cross = 0;
+    double dimple = 0;
+
+    double topBar = 0;
+    double bottomBar = 0;
+
+    double midBar = 0;
+
+    double crossDif = 0;
+
+    for(int x=0;x<fft.size();x++)
+    {
+        for(int y=0;y<fft.size();y++)
+        {
+            double pix = picture->pixelColor(x,y).red();
+
+            if(
+               ((x>18 && y >13) && (x<23 && y < 18)) ||
+               ((x>41 && y >13) && (x<46 && y < 18)) ||
+               ((x>18 && y >47) && (x<23 && y < 52)) ||
+               ((x>41 && y >47) && (x<46 && y < 52))
+              )
+            {
+                array += pix;
+            }
+
+            if(
+               ((x>21 && y >23) && (x<28 && y < 30)) ||
+               ((x>39 && y >29) && (x<46 && y < 36))
+              )
+            {
+                dimple += pix;
+            }
+
+            if((y>14 && y < 17))
+            {
+                topBar += pix;
+            }
+
+            if((y>48 && y < 51))
+            {
+                bottomBar += pix;
+            }
+
+            if(
+               ((x>30 && y >30) && (x<35 && y < 35)) &&
+               !(x==32 && y==32)
+              )
+            {
+                cross+=pix;
+            }
+
+            if(x>29 && x <36)
+            {
+                midBar+=pix;
+            }
+
+            if(((x>25 && y >30) && (x<40 && y < 35)))
+            {
+                crossDif += pix;
+            }
+            if(((x>30 && y >25) && (x<35 && y < 40)))
+            {
+                crossDif -= pix;
+            }
+        }
+    }
+
+
+    features.push_back(array);
+    features.push_back(dimple);
+
+    features.push_back(cross);
+    features.push_back(crossDif);
+
+    features.push_back(topBar);
+    features.push_back(bottomBar);
+
+    features.push_back(midBar);
+
     Element* element = new Element(label, features);
+
     element->setFft(picture);
+    element->setPhase(phase);
 
     emit featuresExtracted(element, x, y, step);
 }

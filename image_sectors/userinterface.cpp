@@ -35,6 +35,7 @@ void UserInterface::extractionFinished(int classes)
 
 void UserInterface::classifierFinished(int recall)
 {
+    ui->statusBar->showMessage(QString("Zakończono"));
 
 }
 
@@ -42,7 +43,7 @@ void UserInterface::imageChanged(QImage *image)
 {
     ui->imageView->setScene(new QGraphicsScene());
     ui->imageView->scene()->addItem(new QGraphicsPixmapItem(QPixmap::fromImage(*image)));
-    //    engine->locker.unlock();
+    ui->statusBar->showMessage(QString("Image"));
 }
 
 void UserInterface::lockOptions(bool enabled)
@@ -67,6 +68,7 @@ void UserInterface::on_actionOtw_rz_obraz_triggered()
 void UserInterface::on_pushButton_clicked()
 {
     connect(engine,SIGNAL(imageReady(QImage*)),this,SLOT(imageChanged(QImage*)));
+    connect(engine,SIGNAL(classifierDone(int)),this,SLOT(classifierFinished(int)));
 
     QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::classify);
 }

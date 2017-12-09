@@ -1,4 +1,5 @@
 #include "knearestneighbourclassifier.h"
+#include <QtDebug>
 
 KNearestNeighbourClassifier::KNearestNeighbourClassifier()
 {
@@ -34,11 +35,16 @@ void KNearestNeighbourClassifier::process(Element *element, int x, int y, int st
         else
             classes[className] = 1;
     }
+    QMap<int, QString> final;
+    for(QString clss:classes.keys())
+    {
+        final[classes[clss]] = clss;
+    }
 
-    QString className = classes.firstKey();
+    QString className = final.last();
 
 //    int rand = qrand() % 5;
-
+//    qDebug() << nearest[0]->getLabel() << " " << distances.keys()[0];
     emit classified(className,x,y,step);
 }
 

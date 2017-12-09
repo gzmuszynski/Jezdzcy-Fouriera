@@ -64,7 +64,7 @@ void PatternClassifier::setClassElements(QMap<QString, Class *> classes, QVector
         Class* newClass = new Class(label, pivot, radius);
 
         newClasses[label] = newClass;
-        elements.push_back(pivot);
+        this->elements.push_back(pivot);
     }
 
     this->classes = newClasses;

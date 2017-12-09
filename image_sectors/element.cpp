@@ -24,3 +24,18 @@ void Element::setFft(QImage *value)
 {
     fft = value;
 }
+
+QImage *Element::getPhase() const
+{
+    return phase;
+}
+
+void Element::setPhase(QImage *value)
+{
+    phase = value;
+}
+
+void Element::setFeatures(const QVector<double> &value)
+{
+    features = value;
+}
