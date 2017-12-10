@@ -13,8 +13,6 @@ void Classifier::setMetric(int value)
 
 void Classifier::normalizeClasses()
 {
-
-
     QVector<double> features = elements[0]->getFeatures();
 
     for(int i = 0; i < features.size(); i++)

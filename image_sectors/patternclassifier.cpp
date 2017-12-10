@@ -1,30 +1,132 @@
 #include "patternclassifier.h"
+#include <QtMath>
+#include <QtDebug>
 
-PatternClassifier::PatternClassifier()
+BayesClassifier::BayesClassifier()
 {
 
 }
 
-void PatternClassifier::process(Element *element, int x, int y, int step)
+double BayesClassifier::kernel(double x)
+{
+    double dense = sqrt2pi*qExp(-x*x*0.5);
+    return dense;
+}
+
+void BayesClassifier::process(Element *element, int x, int y, int step)
 {
     normalize(element);
 
-    QMap<double, QString> distances;
+    QMap<QString,double> probability;
+    QString best;
 
-    for(Element* pivot:elements)
+    for(QString label:classes.keys())
     {
-        double dist = distance(pivot,element);
-        distances.insert(dist, pivot->getLabel());
-    }
-    QString nearest = distances.values()[0];
+        double p = 0;
+        QVector< QMap<double, double> > dV = this->densities[label];
+        QVector<double> features = element->getFeatures();
 
-    emit classified(nearest, x, y, step);
+        for(int f = 0; f < features.size(); f++)
+        {
+            QMap<double, double> dens = dV[f];
+
+            if(dens.contains(features[f]))
+            {
+                p+=dens[f];
+            }
+            else
+            {
+                dens[features[f]] = -1.0;
+                int index = dens.keys().indexOf(features[f]);
+                if(index != 0 && index != dens.size()-1)
+                {
+//                    qDebug() << label << features[f] << dens.keys()[index-1] << dens.keys()[index+1];
+                    double mean = (dens[dens.keys()[index-1]] + dens[dens.keys()[index+1]]) * 0.5;
+                    p *= mean;
+                }
+                dens.remove(features[f]);
+            }
+        }
+
+//        p/=features.size();
+        qDebug() << x << y << label << p;
+
+        p*=classes[label]->getElements().size()*1.0/elements.size();
+        probability[label] = p;
+        if(probability.contains(best))
+        {
+            best = probability.key(qMax(probability[best],p));
+        }
+        else
+            best = label;
+    }
+
+    emit classified(best, x, y, step);
 }
 
-void PatternClassifier::setClassElements(QMap<QString, Class *> classes, QVector<Element *> elements)
+void BayesClassifier::setClassElements(QMap<QString, Class *> classes, QVector<Element *> elements)
 {
     this->elements = QVector<Element*>(elements);
-    this->classes = QMap<QString, Class *>(classes);
-
     normalizeClasses();
+    for(Element* e:this->elements)
+    {
+        QString label = e->getLabel();
+        if(!this->classes.contains(label))
+        {
+            this->classes[label] = new Class(label);
+        }
+        this->classes[label]->addElement(e);
+    }
+
+
+    QMap<QString,QVector<double>> feats;
+
+    double h = 10.5;
+
+    for(QString label:classes.keys())
+    {
+        QVector<Element*> elements = this->classes[label]->getElements();
+        QVector<double> features = elements[0]->getFeatures();
+
+        QVector<QMap<double, double>> values;
+        QVector<QMap<double, double>> dens;
+
+        for(int i = 0; i < elements.size(); i++)
+        {
+            QVector<double> features = elements[i]->getFeatures();
+
+            for(int f = 0; f < features.size(); f++)
+            {
+                if(i==0)
+                {
+                    values.push_back(QMap<double,double>());
+                }
+                values[f][features[f]]++;
+
+            }
+        }
+        for(int f = 0; f < features.size(); f++)
+        {
+            QMap<double, double> densities;
+            QList<double> vals = values[f].keys();
+            QList<double> valsv = values[f].values();
+
+            for(double x = -0.5; x < 1.5; x += 0.001)
+            {
+                for(int i = 0; i < values.size(); i++)
+                {
+                    for(int z = 0; z < valsv[i]; z++)
+                    {
+                        densities[x]+=kernel((x-vals[i])/h);
+                    }
+                }
+                densities[x]/=elements.size()*h;
+                if(densities[x]>1)
+                    qDebug() << densities[x];
+            }
+            dens.push_back(densities);
+        }
+        this->densities[label] = dens;
+    }
+
 }

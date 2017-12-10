@@ -54,7 +54,7 @@
            </item>
            <item>
             <property name="text">
-             <string>Metoda wzorców</string>
+             <string>Klasyfikator Bayesa</string>
             </property>
            </item>
           </widget>

@@ -10,7 +10,7 @@ Engine::Engine()
 {
     extractor = new Extractor();
     classifiers.push_back(new KNearestNeighbourClassifier());
-    classifiers.push_back(new PatternClassifier());
+    classifiers.push_back(new BayesClassifier());
 
     input       = nullptr;
     labels      = nullptr;
@@ -38,7 +38,7 @@ void Engine::train(QString directory)
     elements.clear();
 
     KNearestNeighbourClassifier* knn = (KNearestNeighbourClassifier*)classifiers[0];
-    PatternClassifier* pc = (PatternClassifier*)classifiers[1];
+    BayesClassifier* pc = (BayesClassifier*)classifiers[1];
 
     disconnect(extractor,SIGNAL(featuresExtracted(Element*, int, int, int)));
     connect(extractor,SIGNAL(featuresExtracted(Element*, int, int, int)),this,SLOT(addElementToClass(Element*)));
@@ -257,7 +257,7 @@ void Engine::openClasses(QString filename)
     elements.clear();
 
     KNearestNeighbourClassifier* knn = (KNearestNeighbourClassifier*)classifiers[0];
-    PatternClassifier* pc = (PatternClassifier*)classifiers[1];
+    BayesClassifier* pc = (BayesClassifier*)classifiers[1];
 
     connect(this,SIGNAL(classesReady (QMap<QString,Class*>, QVector<Element*>)),
             knn,SLOT(setClassElements(QMap<QString,Class*>, QVector<Element*>)));

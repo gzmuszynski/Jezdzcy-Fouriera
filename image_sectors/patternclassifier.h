@@ -2,15 +2,22 @@
 #define PATTERNCLASSIFIER_H
 
 #include "classifier.h"
+#include <QtMath>
 
 
 
-class PatternClassifier : public Classifier
+class BayesClassifier : public Classifier
 {
 public:
-    PatternClassifier();
+    BayesClassifier();
 
 protected:
+
+    QMap<QString,QVector<QMap<double,double>>> densities;
+
+    double kernel(double x);
+
+    double sqrt2pi = 1.0/qSqrt(2*M_PI);
 
     // Classifier interface
 public slots:
