@@ -17,6 +17,9 @@ Engine::Engine()
     inputLabels = nullptr;
 
     currentClassifier = 0;
+
+    qRegisterMetaType<QMap<QString,Class*> >("QMap<QString,Class*>");
+    qRegisterMetaType<QVector<Element*> >("QVector<Element*>");
 }
 
 void Engine::loadImage(QString filename, QString labels)
@@ -30,9 +33,13 @@ void Engine::loadImage(QString filename, QString labels)
 void Engine::train(QString directory)
 {
     emit engineBusy(true);
+
+    classes.clear();
+    elements.clear();
+
     KNearestNeighbourClassifier* knn = (KNearestNeighbourClassifier*)classifiers[0];
     PatternClassifier* pc = (PatternClassifier*)classifiers[1];
-    classes.clear();
+
     disconnect(extractor,SIGNAL(featuresExtracted(Element*, int, int, int)));
     connect(extractor,SIGNAL(featuresExtracted(Element*, int, int, int)),this,SLOT(addElementToClass(Element*)));
     connect(this,SIGNAL(classesReady (QMap<QString,Class*>, QVector<Element*>)),
@@ -70,7 +77,6 @@ void Engine::train(QString directory)
         }
     }
 
-
     trainItemCount = itemList.size();
     for(QString item:itemList.keys())
     {
@@ -83,6 +89,7 @@ void Engine::train(QString directory)
 void Engine::classify()
 {
     if(input != nullptr && !(classes.isEmpty()))
+
     {
         emit engineBusy(true);
 
@@ -101,7 +108,14 @@ void Engine::classify()
         if(labels == nullptr)
             labels = new QImage(input->size(),QImage::Format_Indexed8);
 
-        labels->setColorTable(inputLabels->colorTable());
+        QVector<uint> colorTable = inputLabels->colorTable();
+
+        colorTable[0] = 0xFFFFFFFF;
+        colorTable[3] = 0xFF000000;
+        colorTable.push_back(0xFFFF0000);
+        labels->setColorTable(colorTable);
+
+
 
         labels->fill(0);
         step = 64;
@@ -207,7 +221,123 @@ void Engine::saveFFT(QString directory)
 
 void Engine::saveClasses(QString filename)
 {
+    emit engineBusy(true);
+    QFile file(filename);
+    if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream ts(&file);
+        ts.setFieldAlignment(QTextStream::AlignLeft);
+//        ts.setRealNumberPrecision(7);
+//        ts.setNumberFlags(QTextStream::ForcePoint);
+//        ts.setRealNumberNotation(QTextStream::FixedNotation);
 
+        for(Element* e:elements)
+        {
+            QVector<double> features = e->getFeatures();
+            QString label = e->getLabel();
+
+            ts <<  qSetFieldWidth(10) << label;
+            for(double f:features)
+            {
+                ts << f ;
+            }
+            ts << qSetFieldWidth(0) << "\n";
+        }
+    }
+    file.close();
+    emit engineBusy(false);
+}
+
+void Engine::openClasses(QString filename)
+{
+
+    emit engineBusy(true);
+
+    classes.clear();
+    elements.clear();
+
+    KNearestNeighbourClassifier* knn = (KNearestNeighbourClassifier*)classifiers[0];
+    PatternClassifier* pc = (PatternClassifier*)classifiers[1];
+
+    connect(this,SIGNAL(classesReady (QMap<QString,Class*>, QVector<Element*>)),
+            knn,SLOT(setClassElements(QMap<QString,Class*>, QVector<Element*>)));
+    connect(this,SIGNAL(classesReady (QMap<QString,Class*>, QVector<Element*>)),
+            pc,SLOT(setClassElements (QMap<QString,Class*>, QVector<Element*>)));
+
+
+    QFile file(filename);
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream ts(&file);
+//        ts.skipWhiteSpace();
+
+        while(!ts.atEnd())
+        {
+            QVector<double> features;
+            QString label;
+
+            QString line = ts.readLine();
+
+            QStringList lineList = line.split(' ', QString::SkipEmptyParts);
+
+            label = lineList[0];
+            lineList.pop_front();
+
+            for(QString string:lineList)
+            {
+                features.push_back(string.toDouble());
+            }
+            Element* element = new Element(label,features);
+            elements.push_back(element);
+
+            if(!classes.contains(label))
+            {
+                classes[label] = new Class(label);
+            }
+            classes[label]->addElement(element);
+        }
+    }
+    file.close();
+
+    emit engineBusy(false);
+    emit engineTrained(classes.size());
+    emit classesReady(classes, elements);
+}
+
+void Engine::saveImage(QString filename)
+{
+    labels->save(filename);
+}
+
+void Engine::showError()
+{
+    QImage* errors = new QImage(*labels);
+    if(inputLabels != nullptr)
+    {
+        for(int x = 0; x < labels->width(); x++)
+        {
+            for(int y = 0; y < labels->height(); y++)
+            {
+                QRgb classifiedPixel = labels->pixel(x,y);
+                QRgb inputPixel = inputLabels->pixel(x,y);
+
+                if(classifiedPixel != inputPixel)
+                    errors->setPixel(x,y,4);
+            }
+        }
+    }
+    emit imageReady(errors);
+}
+
+void Engine::showLabel()
+{
+    emit imageReady(labels);
+}
+
+void Engine::showInput()
+{
+
+    emit imageReady(inputLabels);
 }
 
 void Engine::changeClassifier(int newClassifier)
@@ -324,7 +454,25 @@ void Engine::adaptiveClassifier(int step)
     }
     else
     {
+        qDebug() << "Calculating recall";
+        double recall = 0;
+
+        QMutexLocker locker(&lock);
+
+        for(int y = 0; y < labels->height(); y++)
+        {
+            for(int x = 0; x < labels->width(); x++)
+            {
+                QRgb pix = labels->pixel(x,y);
+                QRgb pix2 = inputLabels->pixel(x,y);
+                recall += (int)(pix==pix2);
+            }
+        }
+        recall *= 100.0/(labels->width()*labels->height());
+
+        locker.unlock();
+
         emit engineBusy(false);
-        emit classifierDone(0);
+        emit classifierDone(recall);
     }
 }

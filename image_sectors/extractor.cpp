@@ -1,7 +1,6 @@
 #include "extractor.h"
 #include <QDir>
 #include <QtMath>
-#include <QtDebug>
 
 Extractor::Extractor()
 {
@@ -10,7 +9,6 @@ Extractor::Extractor()
 
 void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y = 0, int step = 0)
 {
-//    qDebug() << "called";
     // Average
 
     double mean = 0;
@@ -22,7 +20,7 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
             QColor col = picture->pixelColor(x,y);
             double pix = col.red();
 
-            mean += pix;
+            mean += col.red();
         }
     }
 
@@ -41,37 +39,7 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
         }
     }
 
-    // minmax
-
-    double min = 255;
-    double max = 0;
-
-    for(int x = 0; x < picture->width(); x++)
-    {
-        for(int y = 0; y < picture->height(); y++)
-        {
-            QColor col = picture->pixelColor(x,y);
-            double pix = col.red();
-
-            max = qMax(max, pix);
-            min = qMin(min, pix);
-        }
-    }
-
-    for(int x = 0; x < picture->width(); x++)
-    {
-        for(int y = 0; y < picture->height(); y++)
-        {
-            QColor col = picture->pixelColor(x,y);
-            double s = col.red();
-            double rgb = (s - min) / (max - min);
-            double n = qBound(0.0, rgb*255, 255.0);
-
-//            picture->setPixelColor(x, y, qRgb(n,n,n));
-        }
-    }
-
-
+//    picture->save(QString("D:\\repositories\\builds\\przetwarzanie_obrazu\\sectors\\rand\\%1.bmp").arg(qrand()),"bmp");
 
     // FFT2D and amplitude spectrum
 
@@ -106,9 +74,9 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
     if( side > top )
     {
         QImage* copy = new QImage(*picture);
-        for(int x=0;x<picture->width();x++)
+        for(int x=0;x<fft.size();x++)
         {
-            for(int y=0;y<picture->height();y++)
+            for(int y=0;y<fft.size();y++)
             {
                 QColor pix = copy->pixelColor(x,y);
 
@@ -116,7 +84,6 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
             }
         }
     }
-    picture->save(QString("D:\\repositories\\builds\\przetwarzanie_obrazu\\sectors\\rand\\%1.bmp").arg(qrand()),"bmp");
 
     double array = 0;
     double cross = 0;

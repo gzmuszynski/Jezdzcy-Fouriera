@@ -50,8 +50,8 @@ void KNearestNeighbourClassifier::process(Element *element, int x, int y, int st
 
 void KNearestNeighbourClassifier::setClassElements(QMap<QString, Class *> classes, QVector<Element*> elements)
 {
-    this->elements = elements;
-    this->classes = classes;
+    this->elements = QVector<Element*>(elements);
+    this->classes = QMap<QString, Class *>(classes);
 
     normalizeClasses();
 }

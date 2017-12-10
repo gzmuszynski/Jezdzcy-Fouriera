@@ -31,14 +31,16 @@ void Classifier::normalizeClasses()
             maxes[i] = qMax(maxes[i], features[i]);
         }
     }
-    for(Element* el:elements)
+    for(int i = 0; i < elements.size(); i++)
     {
+        Element* el = new Element(*elements[i]);
         QVector<double> features = el->getFeatures();
         for(int i = 0; i < features.size(); i++)
         {
             features[i] = (features[i] - mins[i]) / (maxes[i] - mins[i]);
         }
         el->setFeatures(features);
+        elements[i] = el;
     }
 }
 

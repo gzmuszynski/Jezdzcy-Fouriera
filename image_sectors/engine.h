@@ -22,6 +22,12 @@ public:
 
     void saveFFT(QString directory);
     void saveClasses(QString filename);
+    void openClasses(QString filename);
+    void saveImage(QString filename);
+
+    void showError();
+    void showLabel();
+    void showInput();
 
     mutable QMutex lock;
 public slots:

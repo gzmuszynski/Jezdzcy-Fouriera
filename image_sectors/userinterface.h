@@ -49,6 +49,14 @@ private slots:
 
     void on_actionZapisz_klasy_triggered();
 
+    void on_actionPoka_b_edy_triggered();
+
+    void on_actionPoka_wynik_triggered();
+
+    void on_actionPoka_testowany_triggered();
+
+    void on_actionZapisz_obraz_triggered();
+
 private:
     Ui::UserInterface *ui;
     Engine* engine;

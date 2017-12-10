@@ -35,7 +35,7 @@ void UserInterface::extractionFinished(int classes)
 
 void UserInterface::classifierFinished(int recall)
 {
-    ui->statusBar->showMessage(QString("Zakończono"));
+    ui->statusBar->showMessage(QString("Zakończono klasyfikowanie. Osiągnięto skuteczność %1\%").arg(recall));
 
 }
 
@@ -43,25 +43,35 @@ void UserInterface::imageChanged(QImage *image)
 {
     ui->imageView->setScene(new QGraphicsScene());
     ui->imageView->scene()->addItem(new QGraphicsPixmapItem(QPixmap::fromImage(*image)));
-    ui->statusBar->showMessage(QString("Image"));
+//    ui->statusBar->showMessage(QString("Image"));
 }
 
 void UserInterface::lockOptions(bool enabled)
 {
-    ui->pushButton->setEnabled(!enabled);
-    ui->metricSpinBox->setEnabled(!enabled);
-    ui->classifierCcomboBox->setEnabled(!enabled);
-    ui->nearSpinBox->setEnabled(!enabled);
+    enabled = !enabled;
+    ui->pushButton                ->setEnabled(enabled);
+    ui->metricSpinBox             ->setEnabled(enabled);
+    ui->classifierCcomboBox       ->setEnabled(enabled);
+    ui->nearSpinBox               ->setEnabled(enabled);
+    ui->actionOtw_rz_klasy        ->setEnabled(enabled);
+    ui->actionOtw_rz_zbi_r_testowy->setEnabled(enabled);
+    ui->actionZapisz_klasy        ->setEnabled(enabled);
+    ui->actionPoka_b_edy          ->setEnabled(enabled);
+    ui->actionPoka_testowany      ->setEnabled(enabled);
+    ui->actionPoka_wynik          ->setEnabled(enabled);
 }
 
 void UserInterface::on_actionOtw_rz_obraz_triggered()
 {
-    QString image = QFileDialog::getOpenFileName(this,"Otwórz obraz","../","*.BMP");
-    QString labels = QFileDialog::getOpenFileName(this,"Otwórz obraz","../","*.BMP");
+    QString image = QFileDialog::getOpenFileName(this,"Otwórz obraz testowy","../sectors","*.BMP");
+    if(image.isEmpty())
+        return;
+    QString labels = QFileDialog::getOpenFileName(this,"Otwórz obraz z etykietami",QString(),"*.BMP");
 
     connect(engine,SIGNAL(imageReady(QImage*)),this,SLOT(imageChanged(QImage*)));
 
-    QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::loadImage,image,labels);
+    if(!labels.isEmpty())
+        QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::loadImage,image,labels);
 
 }
 
@@ -75,12 +85,18 @@ void UserInterface::on_pushButton_clicked()
 
 void UserInterface::on_actionOtw_rz_klasy_triggered()
 {
+    QString dir = QFileDialog::getOpenFileName(this,"Zapisz do pliku","../sectors");
 
+    if(!dir.isEmpty())
+    {
+        connect(engine,SIGNAL(engineTrained(int)),this,SLOT(extractionFinished(int)));
+        QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::openClasses,dir);
+    }
 }
 
 void UserInterface::on_actionOtw_rz_zbi_r_testowy_triggered()
 {
-    QString dir = QFileDialog::getExistingDirectory(this,"Otwórz katalog","../");
+    QString dir = QFileDialog::getExistingDirectory(this,"Otwórz katalog","../sectors");
 
     if(!dir.isEmpty())
     {
@@ -108,14 +124,55 @@ void UserInterface::on_nearSpinBox_valueChanged(int arg1)
 void UserInterface::on_classifierCcomboBox_currentIndexChanged(int index)
 {
     emit classifierChanged(index);
+    if(index == 0)
+    {
+        ui->label_2->setVisible(true);
+        ui->nearSpinBox->setVisible(true);
+    }
+    else
+    {
+        ui->label_2->setVisible(false);
+        ui->nearSpinBox->setVisible(false);
+    }
 }
 
 void UserInterface::on_actionZapisz_klasy_triggered()
 {
-    QString dir = QFileDialog::getExistingDirectory(this,"Zapisz do katalogu","../");
+    QString dir = QFileDialog::getSaveFileName(this,"Zapisz do pliku","../sectors");
 
     if(!dir.isEmpty())
     {
-        QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::saveFFT,dir);
+        QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::saveClasses,dir);
+    }
+}
+
+void UserInterface::on_actionPoka_b_edy_triggered()
+{
+    connect(engine,SIGNAL(imageReady(QImage*)),this,SLOT(imageChanged(QImage*)));
+
+    QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::showError);
+}
+
+void UserInterface::on_actionPoka_wynik_triggered()
+{
+    connect(engine,SIGNAL(imageReady(QImage*)),this,SLOT(imageChanged(QImage*)));
+
+    QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::showLabel);
+}
+
+void UserInterface::on_actionPoka_testowany_triggered()
+{
+    connect(engine,SIGNAL(imageReady(QImage*)),this,SLOT(imageChanged(QImage*)));
+
+    QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::showInput);
+}
+
+void UserInterface::on_actionZapisz_obraz_triggered()
+{
+    QString dir = QFileDialog::getSaveFileName(this,"Zapisz do pliku","../sectors","*.bmp");
+
+    if(!dir.isEmpty())
+    {
+        QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::saveImage,dir);
     }
 }
