@@ -3,7 +3,9 @@
 
 #include "engine.h"
 
+#include <time.h>
 #include <QMainWindow>
+#include <QTime>
 
 namespace Ui {
 class UserInterface;
@@ -60,6 +62,8 @@ private slots:
 private:
     Ui::UserInterface *ui;
     Engine* engine;
+
+    QTime begin;
 };
 
 #endif // USERINTERFACE_H

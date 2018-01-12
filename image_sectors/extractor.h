@@ -24,6 +24,8 @@ private:
     QVector<QVector<std::complex<double> > > FFT2D(QImage* picture);
     QVector<std::complex<double> > even(QVector<std::complex<double> > vec);
     QVector<std::complex<double> > odd(QVector<std::complex<double> > vec);
+
+    double windowFunc(double n, int N);
 };
 
 #endif // EXTRACTOR_H

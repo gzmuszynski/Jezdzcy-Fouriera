@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QMutex>
 #include <QThreadPool>
+#include <QTime>
 
 
 
@@ -70,6 +71,8 @@ private:
 
     int leftToCompute;
     int step;
+
+    QTime stepBegin;
 };
 
 #endif // ENGINE_H

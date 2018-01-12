@@ -31,7 +31,7 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
         for(int y = 0; y < picture->height(); y++)
         {
             QColor col = picture->pixelColor(x,y);
-            double s = col.red();
+            double s = col.red()*windowFunc(x, picture->width())*windowFunc(y,picture->height());
             double rgb = s - mean + 127;
             double n = qBound(0.0, rgb, 255.0);
 
@@ -39,17 +39,18 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
         }
     }
 
+//    picture = new QImage(picture->scaledToHeight(32));
 //    picture->save(QString("D:\\repositories\\builds\\przetwarzanie_obrazu\\sectors\\rand\\%1.bmp").arg(qrand()),"bmp");
 
     // FFT2D and amplitude spectrum
-
+    QImage* copy = new QImage(*picture);
     QVector<QVector<std::complex<double> > > fft = FFT2D(picture);
+    picture = new QImage(picture->scaledToWidth(fft.size()));
     QImage* phase = new QImage(picture->size(), QImage::Format_ARGB32);
 
     QVector<double> features;
 
     double side, top;
-
 
     for(int k=0;k<fft.size();k++)
     {
@@ -59,14 +60,15 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
             double imag = fft[k][n].imag();
 
             double rgb = qBound(0.0,qLn(qSqrt((real*real)+(imag*imag)))*32,255.0);
-            double pha = qPow(10,qAtan2(real,imag));
+//            double rgb = copy->pixelColor(k,n).red();
+            double pha = qBound(0.0,(qSqrt((real*real)+(imag*imag)))*8,255.0);
 
             picture->setPixelColor(k, n, qRgb(rgb,rgb,rgb));
             phase->setPixelColor  (k, n, qRgb(pha,pha,pha));
 
-            if((x < 16 || x > 32+16) && (y < 24 || y > 32+24))
+            if(k==13 && n < 23)
                 side += rgb;
-            if((x < 24 || x > 32+24) && (y < 16 || y > 32+16))
+            if(n==13 && k < 23)
                 top += rgb;
         }
     }
@@ -74,20 +76,70 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
     if( side > top )
     {
         QImage* copy = new QImage(*picture);
+        QImage* copyP = new QImage(*phase);
         for(int x=0;x<fft.size();x++)
         {
             for(int y=0;y<fft.size();y++)
             {
                 QColor pix = copy->pixelColor(x,y);
+                QColor pix2 = copyP->pixelColor(x,y);
 
                 picture->setPixelColor(y,x,pix);
+                phase->setPixelColor(y,x, pix2);
             }
+        }
+    }
+
+    double rad = M_PI/(180);
+
+    int h = picture->height();
+    int w = picture->width();
+
+    int roMax = qSqrt((h*h)+(w*w));
+
+    QVector<QVector<int>> accumulator(roMax);
+    for(int x = 0; x < roMax; x++)
+    {
+        for(int y = 0; y < 180; y++)
+        {
+            accumulator[x].push_back(0);
+        }
+    }
+    for(int x = 0; x < picture->width(); x++)
+    {
+        for(int y = 0; y < picture->height(); y++)
+        {
+            double pix = phase->pixelColor(x,y).red();
+
+            if(pix == 255)
+            {
+                for(int theta = 0; theta < 180; theta++)
+                {
+                    int ro = x*qCos(theta*rad) + y*qSin(theta*rad);
+                    if(ro > 0)
+                    {
+                        accumulator[ro][theta]++;
+                    }
+                }
+            }
+        }
+    }
+
+    QImage* parametric = new QImage(roMax,180,QImage::Format_Grayscale8);
+    for(int x = 0; x < roMax; x++)
+    {
+        for(int y = 0; y < 180; y++)
+        {
+            int rgb = accumulator[x][y];
+            parametric->setPixel(x,y,qRgb(rgb,rgb,rgb));
         }
     }
 
     double array = 0;
     double cross = 0;
+    double cross2 = 0;
     double dimple = 0;
+    double dimple2 = 0;
 
     double topBar = 0;
     double bottomBar = 0;
@@ -100,24 +152,25 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
     {
         for(int y=0;y<fft.size();y++)
         {
-            double pix = picture->pixelColor(x,y).red();
+            double pix = phase->pixelColor(x,y).red();
 
             if(
-               ((x>18 && y >13) && (x<23 && y < 18)) ||
-               ((x>41 && y >13) && (x<46 && y < 18)) ||
-               ((x>18 && y >47) && (x<23 && y < 52)) ||
-               ((x>41 && y >47) && (x<46 && y < 52))
+               ((x>16 && y >12) && (x<23 && y < 19)) ||
+               ((x>40 && y >12) && (x<47 && y < 19))
               )
             {
                 array += pix;
             }
 
             if(
-               ((x>21 && y >23) && (x<28 && y < 30)) ||
-               ((x>39 && y >29) && (x<46 && y < 36))
+               ((x>21 && y >23) && (x<28 && y < 30))
               )
             {
                 dimple += pix;
+            }
+            if((x>64-28 && y >23) && (x<64-21 && y < 30))
+            {
+                dimple2 += pix;
             }
 
             if((y>14 && y < 17))
@@ -137,6 +190,13 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
             {
                 cross+=pix;
             }
+            if(
+               ((x>18 && y >18) && (x<37 && y < 37)) &&
+               !(x==32 && y==32)
+              )
+            {
+                cross2+=pix;
+            }
 
             if(x>29 && x <36)
             {
@@ -155,20 +215,22 @@ void Extractor::extractFeatures(QImage *picture, QString label, int x = 0, int y
     }
 
 
-    features.push_back(array);
+//    features.push_back(array);
     features.push_back(dimple);
+//    features.push_back(dimple2);
 
+//    features.push_back(cross/cross2);
     features.push_back(cross);
-    features.push_back(crossDif);
+//    features.push_back(crossDif);
 
-    features.push_back(topBar);
-    features.push_back(bottomBar);
+//    features.push_back(topBar);
+//    features.push_back(bottomBar);
 
-    features.push_back(midBar);
+//    features.push_back(midBar);
 
     Element* element = new Element(label, features);
 
-    element->setFft(picture);
+    element->setFft(parametric);
     element->setPhase(phase);
 
     emit featuresExtracted(element, x, y, step);
@@ -214,6 +276,29 @@ QVector<std::complex<double>> Extractor::odd(QVector<std::complex<double>> vec)
     for(int i=1;i<vec.size();i+=2)
         result.push_back(vec[i]);
     return result;
+}
+
+double Extractor::windowFunc(double n, int N)
+{
+    //gaussian
+    double sigma = 0.5;
+    double gauss = ((n-(N-1)*0.5)/(sigma*(N-1)*0.5));
+    return qExp(-0.5*gauss*gauss);
+    //hanning
+//    return 0.5-0.5*std::cos(2*M_PI*n/(N-1));
+    //flat top
+//    double a0 = 1;
+//    double a1 = 1.93;
+//    double a2 = 1.29;
+//    double a3 = 0.388;
+//    double a4 = 0.028;
+
+//    double f1 = a1*cos(2*M_PI*n/(N-1));
+//    double f2 = a2*cos(4*M_PI*n/(N-1));
+//    double f3 = a3*cos(6*M_PI*n/(N-1));
+//    double f4 = a4*cos(8*M_PI*n/(N-1));
+
+//            return a0 -f1 + f2 -f3 +f4;
 }
 QVector<QVector<std::complex<double> > > Extractor::FFT2D(QImage *picture)
 {

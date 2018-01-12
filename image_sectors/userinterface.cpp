@@ -31,11 +31,13 @@ void UserInterface::extractionProgress(int processed, int final)
 void UserInterface::extractionFinished(int classes)
 {
     ui->statusBar->showMessage(QString("Wczytano %1 klas").arg(classes) + (classes==1? "ę":""));
+    qDebug() << "Extraction completed:" << classes << "classes found";
 }
 
 void UserInterface::classifierFinished(int recall)
 {
     ui->statusBar->showMessage(QString("Zakończono klasyfikowanie. Osiągnięto skuteczność %1\%").arg(recall));
+    qDebug() << "Classification completed:" << recall << "% accuracy";
 
 }
 
@@ -59,6 +61,11 @@ void UserInterface::lockOptions(bool enabled)
     ui->actionPoka_b_edy          ->setEnabled(enabled);
     ui->actionPoka_testowany      ->setEnabled(enabled);
     ui->actionPoka_wynik          ->setEnabled(enabled);
+    if(enabled)
+    {
+        double time = begin.msecsTo(QTime::currentTime())*0.001;
+        qDebug() << "Execute Time: " << time << "seconds";
+    }
 }
 
 void UserInterface::on_actionOtw_rz_obraz_triggered()
@@ -80,11 +87,13 @@ void UserInterface::on_pushButton_clicked()
     connect(engine,SIGNAL(imageReady(QImage*)),this,SLOT(imageChanged(QImage*)));
     connect(engine,SIGNAL(classifierDone(int)),this,SLOT(classifierFinished(int)));
 
+    begin = QTime::currentTime();
     QtConcurrent::run(QThreadPool::globalInstance(),engine,&Engine::classify);
 }
 
 void UserInterface::on_actionOtw_rz_klasy_triggered()
 {
+    begin = QTime::currentTime();
     QString dir = QFileDialog::getOpenFileName(this,"Zapisz do pliku","../sectors");
 
     if(!dir.isEmpty())
@@ -96,6 +105,7 @@ void UserInterface::on_actionOtw_rz_klasy_triggered()
 
 void UserInterface::on_actionOtw_rz_zbi_r_testowy_triggered()
 {
+    begin = QTime::currentTime();
     QString dir = QFileDialog::getExistingDirectory(this,"Otwórz katalog","../sectors");
 
     if(!dir.isEmpty())
@@ -138,7 +148,9 @@ void UserInterface::on_classifierCcomboBox_currentIndexChanged(int index)
 
 void UserInterface::on_actionZapisz_klasy_triggered()
 {
+    begin = QTime::currentTime();
     QString dir = QFileDialog::getSaveFileName(this,"Zapisz do pliku","../sectors");
+//    QString dir = QFileDialog::getExistingDirectory(this,"Zapisz do pliku","../sectors");
 
     if(!dir.isEmpty())
     {

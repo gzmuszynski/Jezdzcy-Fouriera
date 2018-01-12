@@ -32,7 +32,7 @@ void BayesClassifier::process(Element *element, int x, int y, int step)
 
             if(dens.contains(features[f]))
             {
-                p+=dens[f];
+                p*=dens[f];
             }
             else
             {
@@ -42,7 +42,7 @@ void BayesClassifier::process(Element *element, int x, int y, int step)
                 {
 //                    qDebug() << label << features[f] << dens.keys()[index-1] << dens.keys()[index+1];
                     double mean = (dens[dens.keys()[index-1]] + dens[dens.keys()[index+1]]) * 0.5;
-                    if(mean!=0)
+//                    if(mean!=0)
                         p *= mean;
                 }
                 dens.remove(features[f]);
@@ -54,12 +54,14 @@ void BayesClassifier::process(Element *element, int x, int y, int step)
 
         p*=classes[label]->getElements().size()*1.0/elements.size();
         probability[label] = p;
-        if(probability.contains(best))
+    }
+    best = probability.keys()[0];
+    for(QString label:probability.keys())
+    {
+        if(probability[label] > probability[best])
         {
-            best = probability.key(qMax(probability[best],p));
-        }
-        else
             best = label;
+        }
     }
 
     emit classified(best, x, y, step);
@@ -82,7 +84,7 @@ void BayesClassifier::setClassElements(QMap<QString, Class *> classes, QVector<E
 
     QMap<QString,QVector<double>> feats;
 
-    double h = 0.007;
+    double h = 0.3;
 
     for(QString label:classes.keys())
     {
@@ -126,8 +128,14 @@ void BayesClassifier::setClassElements(QMap<QString, Class *> classes, QVector<E
                     qDebug() << densities[x];
             }
             dens.push_back(densities);
+            for(double x = -0.5; x < 1.5; x += 0.001)
+            {
+                qDebug() << label << x << densities[x];
+            }
         }
+
         this->densities[label] = dens;
     }
+
 
 }

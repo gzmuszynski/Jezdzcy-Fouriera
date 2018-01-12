@@ -132,12 +132,14 @@ void Engine::saveFFT(QString directory)
     emit engineBusy(true);
     for(Class* clss:classes.values())
     {
+//        int ss = elements[0]->getFft()->width();
+        const int s = 64;
         QVector<Element*> elems = clss->getElements();
-        QImage ampPattern(64,64,QImage::Format_Grayscale8);
-        QImage phaPattern(64,64,QImage::Format_Grayscale8);
+        QImage ampPattern(90,180,QImage::Format_Grayscale8);
+        QImage phaPattern(s,s,QImage::Format_Grayscale8);
 
-        double pixMap[64][64];
-        double pixMapP[64][64];
+        double pixMap[90][180];
+        double pixMapP[s][s];
         for(int i = 0; i < elems.size(); i++)
         {
             Element* e = elems[i];
@@ -146,15 +148,23 @@ void Engine::saveFFT(QString directory)
             QImage* amp = e->getFft();
             QImage* pha = e->getPhase();
 
-
-            for(int x = 0; x < 64; x++)
+            for(int x = 0; x < 90; x++)
             {
-                for(int y = 0; y < 64; y++)
+                for(int y = 0; y < 180; y++)
                 {
                     double pix  = qGray(amp->pixelColor(x,y).rgb());
+                    pixMap[x][y]  += pix;
+                }
+            }
+
+            for(int x = 0; x < s; x++)
+            {
+                for(int y = 0; y < s; y++)
+                {
+//                    double pix  = qGray(amp->pixelColor(x,y).rgb());
                     double pixP = qGray(pha->pixelColor(x,y).rgb());
 
-                    pixMap[x][y]  += pix;
+//                    pixMap[x][y]  += pix;
                     pixMapP[x][y] += pixP;
                 }
             }
@@ -172,17 +182,27 @@ void Engine::saveFFT(QString directory)
         QMap<double,int> pixels;
         QMap<double,int> pixelsP;
 
-        for(int x = 0; x < 64; x++)
+        for(int x = 0; x < s; x++)
         {
-            for(int y = 0; y < 64; y++)
+            for(int y = 0; y < s; y++)
             {
-                double pix  = pixMap[x][y];
+//                double pix  = pixMap[x][y];
                 double pixP = pixMapP[x][y];
-                mean += pix;
-                pixels[pix]  = 0;
+//                mean += pix;
+//                pixels[pix]  = 0;
                 pixelsP[pixP] = 0;
             }
         }
+        for(int x = 0; x < 90; x++)
+        {
+            for(int y = 0; y < 180; y++)
+            {
+                double pix  = pixMap[x][y];
+                mean += pix;
+                pixels[pix]  = 0;
+            }
+        }
+
         min = pixels.keys()[3];
         max = pixels.keys()[pixels.size()-3];
 
@@ -191,21 +211,38 @@ void Engine::saveFFT(QString directory)
 
         mean /= ampPattern.height() * ampPattern.width();
 
-        for(int x = 0; x < 64; x++)
+        for(int x = 0; x < 90; x++)
         {
-            for(int y = 0; y < 64; y++)
+            for(int y = 0; y < 180; y++)
+            {
+                pixMap[x][y] = (pixMap[x][y] - min)/(max-min);
+            }
+        }
+
+        for(int x = 0; x < s; x++)
+        {
+            for(int y = 0; y < s; y++)
             {
 //                pixMap[x][y] -= mean - 127;
-                pixMap[x][y] = (pixMap[x][y] - min)/(max-min);
+//                pixMap[x][y] = (pixMap[x][y] - min)/(max-min);
                 pixMapP[x][y] = (pixMapP[x][y] - minP)/(maxP-minP);
             }
         }
-        for(int x = 0; x < 64; x++)
+
+        for(int x = 0; x < 90; x++)
         {
-            for(int y = 0; y < 64; y++)
+            for(int y = 0; y < 180; y++)
             {
                 int rgb = qBound(0.0, (pixMap[x][y])*255, 255.0);
                 ampPattern.setPixelColor(x,y,QColor(rgb,rgb,rgb));
+            }
+        }
+
+        for(int x = 0; x < s; x++)
+        {
+            for(int y = 0; y < s; y++)
+            {
+
 
                 int rgbP = qBound(0.0, (pixMapP[x][y])*255, 255.0);
                 phaPattern.setPixelColor(x,y,QColor(rgbP,rgbP,rgbP));
@@ -300,8 +337,8 @@ void Engine::openClasses(QString filename)
     file.close();
 
     emit engineBusy(false);
-    emit engineTrained(classes.size());
     emit classesReady(classes, elements);
+    emit engineTrained(classes.size());
 }
 
 void Engine::saveImage(QString filename)
@@ -403,14 +440,24 @@ void Engine::finalizeClassification(QString className, int x, int y, int step)
 
     if(leftToCompute==0){
         emit imageReady(new QImage(*labels));
-        emit stepFinished(step*0.5);
+
+        double time = stepBegin.msecsTo(QTime::currentTime())*0.001;
+        qDebug() << "Step"<< step << "execute Time: " << time << "seconds";
+        if(time == 0)
+        {
+            emit engineBusy(false);
+            emit stepFinished(1);
+        }
+        else
+            emit stepFinished(step*0.5);
     }
 }
 
 void Engine::adaptiveClassifier(int step)
 {
-    if(step > 0)
+    if(step > 1)
     {
+        stepBegin = QTime::currentTime();
         qDebug() << "Step " << step << " begin";
         int prev = 0;
         for(int y = 0; y < labels->height(); y+=step)
