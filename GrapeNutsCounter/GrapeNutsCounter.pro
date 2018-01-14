@@ -27,12 +27,18 @@ SOURCES += \
         main.cpp \
         counterwindow.cpp \
     engine.cpp \
-    extractor.cpp
+    extractor.cpp \
+    element.cpp \
+    classifier.cpp \
+    classviewmodel.cpp
 
 HEADERS += \
         counterwindow.h \
     engine.h \
-    extractor.h
+    extractor.h \
+    element.h \
+    classifier.h \
+    classviewmodel.h
 
 FORMS += \
         counterwindow.ui
